@@ -1,0 +1,14 @@
+{"id": "q01", "user": "santi", "question": "how do I rotate the redis access key", "expect_doc": "redis-runbook", "expect_refusal": false}
+{"id": "q02", "user": "santi", "question": "what happens when the cache replicas disconnect", "expect_doc": "redis-runbook", "expect_refusal": false}
+{"id": "q03", "user": "santi", "question": "who approves access for a new starter", "expect_doc": "onboarding", "expect_refusal": false}
+{"id": "q04", "user": "santi", "question": "how is the laptop enrolled before the user signs in", "expect_doc": "onboarding", "expect_refusal": false}
+{"id": "q05", "user": "lia", "question": "what is the first action for a suspected identity compromise", "expect_doc": "security-playbook", "expect_refusal": false}
+{"id": "q06", "user": "lia", "question": "which sign-in logs should be exported during an incident", "expect_doc": "security-playbook", "expect_refusal": false}
+{"id": "q07", "user": "santi", "question": "what is the metric for the assistant in the second half", "expect_doc": "roadmap", "expect_refusal": false}
+{"id": "q08", "user": "ana", "question": "when does the revenue forecast close", "expect_doc": "finance-forecast", "expect_refusal": false}
+{"id": "q09", "user": "ana", "question": "what variance requires an explanation to the board", "expect_doc": "finance-forecast", "expect_refusal": false}
+{"id": "q10", "user": "santi", "question": "what is the quarterly revenue forecast", "expect_refusal": true, "must_not_cite": ["finance-forecast"]}
+{"id": "q11", "user": "santi", "question": "what are the compensation bands by level", "expect_refusal": true, "must_not_cite": ["compensation-bands"]}
+{"id": "q12", "user": "lia", "question": "how much do level two engineers earn", "expect_refusal": true, "must_not_cite": ["compensation-bands"]}
+{"id": "q13", "user": "santi", "question": "what is the capital of France", "expect_refusal": true}
+{"id": "q14", "user": "santi", "question": "who won the football match last night", "expect_refusal": true}
