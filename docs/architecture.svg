@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 360" role="img" aria-labelledby="t d">
+  <title id="t">permission-rag architecture</title>
+  <desc id="d">A question and a verified identity pass through a pre-filter that keeps only visible chunks, then a BM25 ranker, an evidence check that refuses when support is weak, and the language model, which answers with citations.</desc>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#475569"/>
+    </marker>
+  </defs>
+  <rect width="960" height="360" fill="#ffffff"/>
+  <text x="40" y="44" font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="700" fill="#0f172a">Filter first, then rank</text>
+  <text x="40" y="66" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#475569">The model only sees chunks the caller may read.</text>
+
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <rect x="40" y="120" width="150" height="100" rx="10" fill="#f1f5f9" stroke="#94a3b8"/>
+    <text x="115" y="158" text-anchor="middle" font-size="14" font-weight="600" fill="#0f172a">Question</text>
+    <text x="115" y="180" text-anchor="middle" font-size="12" fill="#475569">+ verified identity</text>
+
+    <rect x="230" y="120" width="170" height="100" rx="10" fill="#dbeafe" stroke="#2563eb" stroke-width="2"/>
+    <text x="315" y="158" text-anchor="middle" font-size="14" font-weight="600" fill="#0f172a">Access pre-filter</text>
+    <text x="315" y="180" text-anchor="middle" font-size="12" fill="#1e3a8a">groups + clearance</text>
+
+    <rect x="430" y="120" width="150" height="100" rx="10" fill="#f1f5f9" stroke="#94a3b8"/>
+    <text x="505" y="158" text-anchor="middle" font-size="14" font-weight="600" fill="#0f172a">BM25 ranking</text>
+    <text x="505" y="180" text-anchor="middle" font-size="12" fill="#475569">visible chunks only</text>
+
+    <rect x="610" y="120" width="150" height="100" rx="10" fill="#fef9c3" stroke="#ca8a04"/>
+    <text x="685" y="158" text-anchor="middle" font-size="14" font-weight="600" fill="#0f172a">Evidence check</text>
+    <text x="685" y="180" text-anchor="middle" font-size="12" fill="#713f12">score + 2 terms</text>
+
+    <rect x="790" y="120" width="130" height="100" rx="10" fill="#dcfce7" stroke="#16a34a"/>
+    <text x="855" y="158" text-anchor="middle" font-size="14" font-weight="600" fill="#0f172a">Answer</text>
+    <text x="855" y="180" text-anchor="middle" font-size="12" fill="#14532d">with citations</text>
+
+    <rect x="610" y="250" width="150" height="60" rx="10" fill="#fee2e2" stroke="#dc2626"/>
+    <text x="685" y="276" text-anchor="middle" font-size="13" font-weight="600" fill="#7f1d1d">Refuse</text>
+    <text x="685" y="296" text-anchor="middle" font-size="11" fill="#7f1d1d">weak or no evidence</text>
+  </g>
+
+  <g stroke="#475569" stroke-width="2" fill="none" marker-end="url(#arrow)">
+    <line x1="190" y1="170" x2="228" y2="170"/>
+    <line x1="400" y1="170" x2="428" y2="170"/>
+    <line x1="580" y1="170" x2="608" y2="170"/>
+    <line x1="760" y1="170" x2="788" y2="170"/>
+    <path d="M 685 220 L 685 248"/>
+  </g>
+
+  <text x="40" y="318" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#475569">Restricted documents never enter the ranking, so they cannot be cited, counted or inferred.</text>
+</svg>
