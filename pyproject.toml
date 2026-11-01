@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "permrag"
+version = "0.1.0"
+description = "Permission-aware RAG: access control is applied during retrieval, before any document reaches the model."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+azure = ["azure-search-documents>=11.4", "openai>=1.40", "azure-identity>=1.15"]
+api = ["fastapi>=0.110", "uvicorn>=0.29"]
+
+[tool.setuptools.packages.find]
+include = ["permrag*"]
