@@ -11,6 +11,38 @@ An eval suite checks for leaks and fails the build if it finds one.
 
 ![architecture](docs/architecture.svg)
 
+## Measured: what post-filtering costs
+
+The claim above is testable, so it is measured. Same corpus, same BM25, same
+queries: the only variable is whether the filter runs before or after ranking.
+Each topic has three visible documents and a growing number of restricted ones
+that are byte-identical, which is the worst case and the one that matters.
+
+![recall sweep](docs/recall-sweep.svg)
+
+```
+restricted  recall pre  recall post  empty post
+         0        100%         100%          0%
+         2        100%         100%          0%
+         3        100%          95%          5%
+         5        100%          80%         20%
+         8        100%          58%         42%
+        12        100%          57%         43%
+        20        100%          32%         68%
+        35        100%          35%         65%
+```
+
+At 20 restricted near-duplicates per topic, filtering after ranking answers 32% of
+the questions that filtering before ranking answers 100% of. Two thirds of the
+corpus becomes invisible to the caller, and 68% of the queries come back empty even
+though the answer exists and the caller is allowed to read it.
+
+The numbers do not collapse to zero because three visible documents per topic share
+the answer. With one, post-filter recall falls to `k / (k + restricted)`.
+
+Run it with `python benchmarks/recall_sweep.py`. The corpus is generated in the
+script, so the result is reproducible and the run takes about a second.
+
 ## Why filtering happens before ranking
 
 The common pattern is retrieve first and filter after:
