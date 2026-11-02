@@ -21,27 +21,38 @@ that are byte-identical, which is the worst case and the one that matters.
 ![recall sweep](docs/recall-sweep.svg)
 
 ```
-restricted  recall pre  recall post  empty post
-         0        100%         100%          0%
-         2        100%         100%          0%
-         3        100%          95%          5%
-         5        100%          80%         20%
-         8        100%          58%         42%
-        12        100%          57%         43%
-        20        100%          32%         68%
-        35        100%          35%         65%
+restricted  recall pre  recall post     +/-  empty post
+         0        100%       100%     0.1%          0%
+         2        100%       100%     0.1%          0%
+         3        100%        96%     0.8%          4%
+         5        100%        82%     1.5%         18%
+         8        100%        64%     1.9%         36%
+        12        100%        52%     2.0%         48%
+        20        100%        37%     1.9%         63%
+        35        100%        21%     1.6%         79%
 ```
 
-At 20 restricted near-duplicates per topic, filtering after ranking answers 32% of
-the questions that filtering before ranking answers 100% of. Two thirds of the
-corpus becomes invisible to the caller, and 68% of the queries come back empty even
-though the answer exists and the caller is allowed to read it.
+At 20 restricted near-duplicates per topic, filtering after ranking answers 37% of
+the questions that filtering before ranking answers 100% of. 63% of the queries come
+back empty even though the answer exists and the caller is allowed to read it.
 
-The numbers do not collapse to zero because three visible documents per topic share
-the answer. With one, post-filter recall falls to `k / (k + restricted)`.
+Each point is the mean of 40 shuffles across 60 topics, 2400 trials in total, with a
+95% Wilson interval of about two points. The measured values agree with the closed
+form `1 - C(R,k) / C(V+R,k)`, where `V` is the visible documents per topic and `R`
+the restricted ones. That agreement is the check that the harness measures what it
+claims to measure, and it is why a single shuffle is not used: one permutation can
+land three points off.
+
+The corpus is deliberately degenerate. Documents in a topic are identical apart from
+their id, so every score ties and the order is arbitrary. That is the worst case, not
+the typical one: a real corpus has a score distribution, and how often a restricted
+document outranks the relevant visible one depends on how much their scores overlap.
+The true cost sits somewhere between zero and this ceiling, which is why the shape of
+the curve matters more than the exact value.
 
 Run it with `python benchmarks/recall_sweep.py`. The corpus is generated in the
-script, so the result is reproducible and the run takes about a second.
+script, so the result is reproducible. It takes about 100 seconds because of the 40
+shuffles.
 
 ## Why filtering happens before ranking
 
@@ -164,6 +175,9 @@ from a validated token, and nothing in the request body decides who the caller i
   token, and the failure to watch for is group claims drifting from the source directory.
 - A document is the unit of permission. Corpora that need per-chunk permissions need a richer
   model.
+- The recall sweep uses a degenerate corpus where scores tie exactly. It bounds the cost of
+  post-filtering from above; it does not predict the cost on a corpus with a real score
+  distribution.
 - The corpus is synthetic. It contains no real company material.
 
 ## Layout

@@ -13,6 +13,7 @@ question better than the visible one.
 
 from __future__ import annotations
 
+import math
 import random
 import sys
 from pathlib import Path
@@ -33,13 +34,14 @@ TOPICS = [f"{base} {variant}" for base in BASE_TOPICS for variant in VARIANTS]
 
 VISIBLE_PER_TOPIC = 3
 K = 3
+REPEATS = 40
 RESTRICTED_STEPS = [0, 1, 2, 3, 5, 8, 12, 20, 35]
 
 ENGINEER = Identity(user="engineer", groups=frozenset({"eng"}), level=1)
 EVERYTHING = Identity(user="everything", groups=frozenset({"eng", "finance"}), level=9)
 
 
-def build_documents(restricted_per_topic: int) -> list[Document]:
+def build_documents(restricted_per_topic: int, seed: int) -> list[Document]:
     """All documents in a topic share the same vocabulary, so the ranker has no
     way to prefer the visible one. That is the worst case for post-filtering
     and the point of the experiment."""
@@ -74,13 +76,14 @@ def build_documents(restricted_per_topic: int) -> list[Document]:
             )
     # Equal scores tie, and a stable sort keeps insertion order, which would put
     # the visible documents first and flatter post-filtering. Shuffle with a
-    # fixed seed so ties break neutrally and the run stays reproducible.
-    random.Random(0).shuffle(docs)
+    # caller-supplied seed so ties break neutrally, and repeat over many seeds
+    # instead of trusting a single permutation.
+    random.Random(seed).shuffle(docs)
     return docs
 
 
-def evaluate(restricted_per_topic: int) -> dict[str, float]:
-    chunks = build_chunks(build_documents(restricted_per_topic))
+def evaluate(restricted_per_topic: int, seed: int) -> dict[str, float]:
+    chunks = build_chunks(build_documents(restricted_per_topic, seed))
 
     pre_filter = KeywordStore(chunks)
     rank_everything = KeywordStore(chunks)
@@ -169,23 +172,51 @@ def render_svg(points: list[tuple[int, float, float]]) -> str:
 """
 
 
+def wilson(successes: float, total: int, z: float = 1.96) -> tuple[float, float]:
+    """Wilson score interval. Well behaved near 0 and 1, unlike the normal
+    approximation, which matters at the low end of this sweep."""
+    if total == 0:
+        return 0.0, 0.0
+    p = successes / total
+    denominator = 1 + z * z / total
+    centre = (p + z * z / (2 * total)) / denominator
+    margin = z * math.sqrt(p * (1 - p) / total + z * z / (4 * total * total)) / denominator
+    return max(0.0, centre - margin), min(1.0, centre + margin)
+
+
 def main() -> None:
-    print(f"{'restricted':>10} {'recall pre':>11} {'recall post':>12} {'empty post':>11}")
-    print("-" * 48)
+    # A single shuffle is one arbitrary permutation, not an estimate. Repeat the
+    # sweep over many seeds so the reported number is an expected value with an
+    # interval, not one lucky arrangement.
+    trials = REPEATS * len(TOPICS)
+
+    print(f"{'restricted':>10} {'recall pre':>11} {'recall post':>12} {'+/-':>7} {'empty post':>11}")
+    print("-" * 56)
     points: list[tuple[int, float, float]] = []
 
     for step in RESTRICTED_STEPS:
-        metrics = evaluate(step)
-        points.append((step, metrics["recall_pre"], metrics["recall_post"]))
+        pre = post = empty = 0.0
+        for seed in range(REPEATS):
+            metrics = evaluate(step, seed)
+            pre += metrics["recall_pre"]
+            post += metrics["recall_post"]
+            empty += metrics["empty_rate"]
+
+        mean_pre, mean_post, mean_empty = pre / REPEATS, post / REPEATS, empty / REPEATS
+        low, high = wilson(mean_post * trials, trials)
+        margin = (high - low) / 2
+        points.append((step, mean_pre, mean_post))
         print(
-            f"{step:>10} {metrics['recall_pre']:>11.0%} {metrics['recall_post']:>12.0%} "
-            f"{metrics['empty_rate']:>11.0%}"
+            f"{step:>10} {mean_pre:>11.0%} {mean_post:>10.0%} {margin:>8.1%} "
+            f"{mean_empty:>11.0%}"
         )
+
+    print(f"\n{REPEATS} shuffles per point, {len(TOPICS)} topics, {trials} trials. 95% Wilson interval.")
 
     target = ROOT / "docs" / "recall-sweep.svg"
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(render_svg(points), encoding="utf-8")
-    print(f"\nwrote {target.relative_to(ROOT)}")
+    print(f"wrote {target.relative_to(ROOT)}")
 
 
 if __name__ == "__main__":
